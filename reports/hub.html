@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Comet — Report Hub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@400;600;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="comet.css">
+<style>
+body { overflow: auto; }
+.hub-header { background: var(--bg-white); border-bottom: 1px solid var(--border); padding: 32px 24px; }
+.hub-header-inner { max-width: 1200px; margin: 0 auto; }
+.hub-header h1 { font-size: 28px; font-weight: 900; color: var(--fg-heading); }
+.hub-header p { font-size: 16px; color: var(--fg-muted); margin-top: 4px; }
+.hub-filters { display: flex; gap: 8px; margin: 24px 0 16px; flex-wrap: wrap; }
+.filter-btn {
+  padding: 6px 16px; border-radius: var(--radius-pill); border: 1px solid var(--border);
+  background: var(--bg-white); font-family: var(--font); font-size: 13px; font-weight: 600;
+  color: var(--fg-muted); cursor: pointer; transition: all 0.15s;
+}
+.filter-btn:hover { border-color: var(--blue); color: var(--blue); }
+.filter-btn.active { background: var(--blue); color: #fff; border-color: var(--blue); }
+.report-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 16px; }
+.report-card {
+  background: var(--bg-white); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 24px; box-shadow: var(--shadow-card); transition: box-shadow 0.15s, border-color 0.15s;
+  text-decoration: none; color: inherit; display: block;
+}
+.report-card:hover { box-shadow: var(--shadow-elevated); border-color: var(--blue); text-decoration: none; }
+.report-card h3 { font-size: 17px; font-weight: 700; color: var(--fg-heading); margin-bottom: 6px; }
+.report-card .meta { display: flex; gap: 8px; align-items: center; margin-bottom: 10px; }
+.report-card .summary { font-size: 14px; color: var(--fg-muted); line-height: 1.5; }
+.empty-state { text-align: center; padding: 80px 24px; color: var(--fg-muted); }
+.empty-state h2 { font-size: 22px; font-weight: 700; margin-bottom: 8px; color: var(--fg-heading); }
+</style>
+</head>
+<body>
+<div class="hub-header">
+  <div class="hub-header-inner">
+    <h1>Comet</h1>
+    <p>Experience intelligence reports</p>
+  </div>
+</div>
+<div class="container" style="padding-top:24px;">
+  <div class="hub-filters" id="filters"></div>
+  <div class="report-grid" id="grid"></div>
+  <div class="empty-state" id="empty" style="display:none;">
+    <h2>No reports yet</h2>
+    <p>Ask sliccy to analyze a website to generate your first report.</p>
+  </div>
+</div>
+<script>
+(async () => {
+  let manifest = [];
+  try {
+    const res = await fetch('manifest.json');
+    manifest = await res.json();
+  } catch { }
+
+  if (!manifest.length) {
+    document.getElementById('empty').style.display = '';
+    return;
+  }
+
+  const categories = [...new Set(manifest.map(r => r.category))].sort();
+  const filtersEl = document.getElementById('filters');
+  const gridEl = document.getElementById('grid');
+
+  const allBtn = document.createElement('button');
+  allBtn.className = 'filter-btn active';
+  allBtn.textContent = 'All';
+  allBtn.onclick = () => render();
+  filtersEl.appendChild(allBtn);
+
+  categories.forEach(cat => {
+    const btn = document.createElement('button');
+    btn.className = 'filter-btn';
+    btn.textContent = cat.charAt(0).toUpperCase() + cat.slice(1);
+    btn.onclick = () => render(cat);
+    filtersEl.appendChild(btn);
+  });
+
+  function render(filterCat) {
+    filtersEl.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    if (filterCat) {
+      [...filtersEl.children].find(b => b.textContent.toLowerCase() === filterCat).classList.add('active');
+    } else {
+      filtersEl.children[0].classList.add('active');
+    }
+
+    const items = filterCat ? manifest.filter(r => r.category === filterCat) : manifest;
+    items.sort((a, b) => b.date.localeCompare(a.date));
+
+    gridEl.innerHTML = items.map(r => `
+      <a class="report-card" href="${r.id}.html">
+        <h3>${r.title}</h3>
+        <div class="meta">
+          <span class="badge badge-info">${r.category}</span>
+          <span class="report-date">${r.date}</span>
+        </div>
+        <div class="summary">${r.summary}</div>
+      </a>
+    `).join('');
+  }
+
+  render();
+})();
+</script>
+</body>
+</html>
