@@ -1,5 +1,7 @@
 # Comet - Experience Intelligence Skill
 
+[![9% Vibe_Coded](https://img.shields.io/badge/9%25-Vibe_Coded-ff69b4?style=for-the-badge&logo=robot&logoColor=white)](https://github.com/ai-ecoverse/vibe-coded-badge-action)
+
 A SLICC skill for analyzing websites and generating visual HTML reports. No backend, no deployment - the AI agent is the analyst, generator, and chat interface.
 
 ## Features
